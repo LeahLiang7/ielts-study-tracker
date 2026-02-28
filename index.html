@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IELTS 学习打卡系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .logo p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-item .icon {
+      font-size: 20px;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .page-header .date {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .daily-tasks {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .task-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .task-header h3 {
+      font-size: 20px;
+      color: #333;
+    }
+
+    .task-desc {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .checkbox-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .checkbox-wrapper input {
+      display: none;
+    }
+
+    .checkmark {
+      display: block;
+      width: 30px;
+      height: 30px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .checkbox-wrapper input:checked + .checkmark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .checkbox-wrapper input:checked + .checkmark::after {
+      content: '✓';
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+    }
+
+    .streak-display {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .streak-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .streak-number {
+      display: block;
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .streak-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .timer-container {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .timer-mode-selector {
+      margin-bottom: 30px;
+    }
+
+    .timer-mode-selector h3 {
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .mode-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 10px 20px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .mode-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .mode-btn.active {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .timer-display {
+      font-size: 72px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 15px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .timer-mode-label {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #d97706;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .score-input-section {
+      background: #f9fafb;
+      padding: 25px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .score-input-section h3 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .score-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .input-group input {
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .today-stats {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .today-stats h3 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 10px;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .records-list {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 60px 20px;
+      font-size: 16px;
+    }
+
+    .record-item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 20px 0;
+    }
+
+    .record-item:last-child {
+      border-bottom: none;
+    }
+
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .record-date {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .record-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .record-duration {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 28px;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      line-height: 1;
+    }
+
+    .btn-delete:hover {
+      background: #fee2e2;
+      transform: scale(1.1);
+    }
+
+    .record-scores {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .score-badge {
+      padding: 5px 12px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .score-badge strong {
+      color: #333;
+      margin-left: 5px;
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .overview-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .overview-card h4 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    .big-number {
+      font-size: 40px;
+      font-weight: bold;
+      color: #667eea;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .unit {
+      font-size: 14px;
+      color: #999;
+    }
+
+    .charts-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .chart-card.full-width {
+      grid-column: 1;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-card h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .main-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .main-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .main-content::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* 分数换算器 */
+    .converter-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 25px;
+    }
+
+    .converter-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .converter-section h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 20px;
+    }
+
+    .converter-input {
+      margin-bottom: 20px;
+    }
+
+    .converter-input label {
+      display: block;
+      margin-bottom: 10px;
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .converter-input input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .converter-input input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .converter-result {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .result-label {
+      display: block;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .result-score {
+      display: block;
+      color: white;
+      font-size: 48px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+
+    .converter-table {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      grid-column: 1 / -1;
+    }
+
+    .converter-table h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 20px;
+    }
+
+    .converter-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .converter-table th,
+    .converter-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .converter-table th {
+      background: #f9fafb;
+      color: #666;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .converter-table td {
+      color: #333;
+      font-size: 15px;
+    }
+
+    .converter-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .converter-table tr:hover {
+      background: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="sidebar">
+      <div class="logo">
+        <h1>📚 IELTS</h1>
+        <p>学习打卡系统</p>
+      </div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-page="daily">
+          <span class="icon">✓</span>
+          <span>每日打卡</span>
+        </button>
+        <button class="nav-item" data-page="timer">
+          <span class="icon">⏱</span>
+          <span>学习计时</span>
+        </button>
+        <button class="nav-item" data-page="records">
+          <span class="icon">📊</span>
+          <span>学习记录</span>
+        </button>
+        <button class="nav-item" data-page="stats">
+          <span class="icon">📈</span>
+          <span>数据统计</span>
+        </button>
+        <button class="nav-item" data-page="converter">
+          <span class="icon">🔢</span>
+          <span>分数换算</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <div id="daily-page" class="page active">
+        <div class="page-header">
+          <h2>今日打卡</h2>
+          <p class="date" id="current-date"></p>
+        </div>
+        
+        <div class="daily-tasks">
+          <div class="task-card">
+            <div class="task-header">
+              <h3>🎧 听力练习</h3>
+              <label class="checkbox-wrapper">
+                <input type="checkbox" id="listening-check">
+                <span class="checkmark"></span>
+              </label>
+            </div>
+            <p class="task-desc">完成一套听力题目（约40分钟）</p>
+          </div>
+
+          <div class="task-card">
+            <div class="task-header">
+              <h3>📖 阅读练习</h3>
+              <label class="checkbox-wrapper">
+                <input type="checkbox" id="reading-check">
+                <span class="checkmark"></span>
+              </label>
+            </div>
+            <p class="task-desc">完成一套阅读题目（约60分钟）</p>
+          </div>
+
+          <div class="task-card">
+            <div class="task-header">
+              <h3>✍️ 写作练习</h3>
+              <label class="checkbox-wrapper">
+                <input type="checkbox" id="writing-check">
+                <span class="checkmark"></span>
+              </label>
+            </div>
+            <p class="task-desc">完成写作练习（约60分钟）</p>
+          </div>
+
+          <div class="task-card">
+            <div class="task-header">
+              <h3>🗣 口语练习</h3>
+              <label class="checkbox-wrapper">
+                <input type="checkbox" id="speaking-check">
+                <span class="checkmark"></span>
+              </label>
+            </div>
+            <p class="task-desc">完成口语练习（约15分钟）</p>
+          </div>
+        </div>
+
+        <div class="streak-display">
+          <div class="streak-item">
+            <span class="streak-number" id="current-streak">0</span>
+            <span class="streak-label">当前连续打卡</span>
+          </div>
+          <div class="streak-item">
+            <span class="streak-number" id="total-days">0</span>
+            <span class="streak-label">累计打卡天数</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="timer-page" class="page">
+        <div class="page-header">
+          <h2>学习计时器</h2>
+        </div>
+
+        <div class="timer-container">
+          <div class="timer-mode-selector">
+            <h3>选择学习模式</h3>
+            <div class="mode-buttons">
+              <button class="mode-btn active" data-mode="listening">🎧 听力</button>
+              <button class="mode-btn" data-mode="reading">📖 阅读</button>
+              <button class="mode-btn" data-mode="writing">✍️ 写作</button>
+              <button class="mode-btn" data-mode="speaking">💬 口语</button>
+              <button class="mode-btn" data-mode="listening-reading">🎧📖 听力+阅读</button>
+              <button class="mode-btn" data-mode="full-test">📝 完整模考（听+读+写）</button>
+            </div>
+          </div>
+
+          <div class="timer-display">
+            <span id="timer-hours">00</span>:<span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
+          </div>
+          <div class="timer-mode-label" id="current-mode-label">当前模式：听力</div>
+
+          <div class="timer-controls">
+            <button class="btn btn-primary" id="start-timer">开始</button>
+            <button class="btn btn-secondary" id="pause-timer" disabled>暂停</button>
+            <button class="btn btn-danger" id="stop-timer" disabled>停止并保存</button>
+          </div>
+
+          <div class="score-input-section" id="score-section" style="display: none;">
+            <h3>记录本次学习成绩</h3>
+            <div class="score-inputs" id="score-inputs-container">
+              <!-- 动态生成 -->
+            </div>
+            <button class="btn btn-success" id="save-record">保存记录</button>
+          </div>
+        </div>
+
+        <div class="today-stats">
+          <h3>今日学习统计</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-value" id="today-duration">0分钟</span>
+              <span class="stat-label">学习时长</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="today-sessions">0次</span>
+              <span class="stat-label">学习次数</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="records-page" class="page">
+        <div class="page-header">
+          <h2>学习记录</h2>
+        </div>
+
+        <div class="records-list" id="records-list">
+          <p class="empty-state">暂无学习记录，开始你的第一次学习吧！</p>
+        </div>
+      </div>
+
+      <div id="stats-page" class="page">
+        <div class="page-header">
+          <h2>数据统计</h2>
+        </div>
+
+        <div class="stats-overview">
+          <div class="overview-card">
+            <h4>总学习时长</h4>
+            <p class="big-number" id="total-duration">0</p>
+            <span class="unit">小时</span>
+          </div>
+          <div class="overview-card">
+            <h4>平均每日时长</h4>
+            <p class="big-number" id="avg-duration">0</p>
+            <span class="unit">分钟</span>
+          </div>
+          <div class="overview-card">
+            <h4>最高分数</h4>
+            <p class="big-number" id="best-score">0</p>
+            <span class="unit">分</span>
+          </div>
+          <div class="overview-card">
+            <h4>平均分数</h4>
+            <p class="big-number" id="avg-score">0</p>
+            <span class="unit">分</span>
+          </div>
+        </div>
+
+        <div class="charts-container">
+          <div class="chart-card">
+            <h3>学习时长趋势（最近14天）</h3>
+            <canvas id="duration-chart" width="400" height="200"></canvas>
+          </div>
+          <div class="chart-card full-width">
+            <h3>🎧 听力成绩趋势</h3>
+            <canvas id="listening-chart" width="400" height="200"></canvas>
+          </div>
+          <div class="chart-card full-width">
+            <h3>📖 阅读成绩趋势</h3>
+            <canvas id="reading-chart" width="400" height="200"></canvas>
+          </div>
+          <div class="chart-card full-width">
+            <h3>✍️ 写作成绩趋势</h3>
+            <canvas id="writing-chart" width="400" height="200"></canvas>
+          </div>
+          <div class="chart-card full-width">
+            <h3>🗣 口语成绩趋势</h3>
+            <canvas id="speaking-chart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分数换算页面 -->
+      <div id="converter-page" class="page">
+        <div class="page-header">
+          <h2>分数换算器</h2>
+          <p class="date">听力和阅读题目数量换算为雅思分数</p>
+        </div>
+
+        <div class="converter-container">
+          <div class="converter-section">
+            <h3>🎧 听力分数换算</h3>
+            <div class="converter-input">
+              <label>答对题目数量（0-40）</label>
+              <input type="number" id="listening-correct" min="0" max="40" placeholder="输入答对题数">
+            </div>
+            <div class="converter-result">
+              <span class="result-label">雅思分数：</span>
+              <span class="result-score" id="listening-result">-</span>
+            </div>
+          </div>
+
+          <div class="converter-section">
+            <h3>📖 阅读分数换算</h3>
+            <div class="converter-input">
+              <label>答对题目数量（0-40）</label>
+              <input type="number" id="reading-correct" min="0" max="40" placeholder="输入答对题数">
+            </div>
+            <div class="converter-result">
+              <span class="result-label">雅思分数：</span>
+              <span class="result-score" id="reading-result">-</span>
+            </div>
+          </div>
+
+          <div class="converter-table">
+            <h3>📊 换算对照表</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>答对题数</th>
+                  <th>雅思分数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>39-40</td><td>9.0</td></tr>
+                <tr><td>37-38</td><td>8.5</td></tr>
+                <tr><td>35-36</td><td>8.0</td></tr>
+                <tr><td>33-34</td><td>7.5</td></tr>
+                <tr><td>30-32</td><td>7.0</td></tr>
+                <tr><td>27-29</td><td>6.5</td></tr>
+                <tr><td>23-26</td><td>6.0</td></tr>
+                <tr><td>20-22</td><td>5.5</td></tr>
+                <tr><td>16-19</td><td>5.0</td></tr>
+                <tr><td>13-15</td><td>4.5</td></tr>
+                <tr><td>10-12</td><td>4.0</td></tr>
+                <tr><td>6-9</td><td>3.5</td></tr>
+                <tr><td>4-5</td><td>3.0</td></tr>
+                <tr><td>3</td><td>2.5</td></tr>
+                <tr><td>2</td><td>2.0</td></tr>
+                <tr><td>1</td><td>1.0</td></tr>
+                <tr><td>0</td><td>0.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    let appData = {
+      records: [],
+      dailyChecks: {}
+    };
+
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let isTimerRunning = false;
+    let currentTimerMode = 'listening';
+    
+    const modeConfig = {
+      'listening': { 
+        name: '听力', 
+        icon: '🎧',
+        scores: ['listening']
+      },
+      'reading': { 
+        name: '阅读', 
+        icon: '📖',
+        scores: ['reading']
+      },
+      'writing': { 
+        name: '写作', 
+        icon: '✍️',
+        scores: ['writing']
+      },
+      'speaking': { 
+        name: '口语', 
+        icon: '💬',
+        scores: ['speaking']
+      },
+      'listening-reading': { 
+        name: '听力+阅读', 
+        icon: '🎧📖',
+        scores: ['listening', 'reading']
+      },
+      'full-test': { 
+        name: '完整模考（听+读+写）', 
+        icon: '📝',
+        scores: ['listening', 'reading', 'writing']
+      }
+    };
+
+    function loadData() {
+      const saved = localStorage.getItem('ielts-study-data');
+      if (saved) {
+        appData = JSON.parse(saved);
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem('ielts-study-data', JSON.stringify(appData));
+    }
+
+    function initApp() {
+      loadData();
+      updateCurrentDate();
+      loadDailyCheckStatus();
+      updateStreakDisplay();
+      updateTodayStats();
+      updateRecordsList();
+      updateStatsPage();
+      bindEvents();
+    }
+
+    function updateCurrentDate() {
+      const dateEl = document.getElementById('current-date');
+      const now = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      dateEl.textContent = now.toLocaleDateString('zh-CN', options);
+    }
+
+    function getTodayString() {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
+
+    function loadDailyCheckStatus() {
+      const today = getTodayString();
+      const todayCheck = appData.dailyChecks[today] || { listening: false, reading: false, writing: false, speaking: false };
+      
+      document.getElementById('listening-check').checked = todayCheck.listening;
+      document.getElementById('reading-check').checked = todayCheck.reading;
+      document.getElementById('writing-check').checked = todayCheck.writing;
+      document.getElementById('speaking-check').checked = todayCheck.speaking;
+    }
+
+    function saveDailyCheckStatus() {
+      const today = getTodayString();
+      const listening = document.getElementById('listening-check').checked;
+      const reading = document.getElementById('reading-check').checked;
+      const writing = document.getElementById('writing-check').checked;
+      const speaking = document.getElementById('speaking-check').checked;
+      
+      appData.dailyChecks[today] = { listening, reading, writing, speaking };
+      saveData();
+      updateStreakDisplay();
+    }
+
+    function updateStreakDisplay() {
+      let currentStreak = 0;
+      let totalDays = 0;
+      
+      const dates = Object.keys(appData.dailyChecks).sort().reverse();
+      
+      totalDays = dates.filter(date => {
+        const check = appData.dailyChecks[date];
+        return check.listening && check.reading && check.writing && check.speaking;
+      }).length;
+      
+      const today = new Date();
+      for (let i = 0; i < dates.length; i++) {
+        const checkDate = new Date(dates[i]);
+        const diffDays = Math.floor((today - checkDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === i) {
+          const check = appData.dailyChecks[dates[i]];
+          if (check.listening && check.reading && check.writing && check.speaking) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
+      }
+      
+      document.getElementById('current-streak').textContent = currentStreak;
+      document.getElementById('total-days').textContent = totalDays;
+    }
+
+    function selectTimerMode(mode) {
+      if (isTimerRunning) {
+        alert('请先停止当前计时再切换模式');
+        return;
+      }
+      
+      currentTimerMode = mode;
+      
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+      
+      const config = modeConfig[mode];
+      document.getElementById('current-mode-label').textContent = `当前模式：${config.name}`;
+    }
+
+    function startTimer() {
+      if (!isTimerRunning) {
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          updateTimerDisplay();
+        }, 1000);
+        
+        document.getElementById('start-timer').disabled = true;
+        document.getElementById('pause-timer').disabled = false;
+        document.getElementById('stop-timer').disabled = false;
+        
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        });
+      }
+    }
+
+    function pauseTimer() {
+      if (isTimerRunning) {
+        isTimerRunning = false;
+        clearInterval(timerInterval);
+        
+        document.getElementById('start-timer').disabled = false;
+        document.getElementById('start-timer').textContent = '继续';
+        document.getElementById('pause-timer').disabled = true;
+      }
+    }
+
+    function stopTimer() {
+      if (timerSeconds > 0) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        
+        generateScoreInputs();
+        document.getElementById('score-section').style.display = 'block';
+        
+        document.getElementById('start-timer').disabled = true;
+        document.getElementById('pause-timer').disabled = true;
+        document.getElementById('stop-timer').disabled = true;
+      }
+    }
+
+    function generateScoreInputs() {
+      const container = document.getElementById('score-inputs-container');
+      const config = modeConfig[currentTimerMode];
+      const scoreLabels = {
+        'listening': '听力分数',
+        'reading': '阅读分数',
+        'writing': '写作分数',
+        'speaking': '口语分数'
+      };
+      
+      container.innerHTML = config.scores.map(scoreType => `
+        <div class="input-group">
+          <label>${scoreLabels[scoreType]}</label>
+          <input type="number" id="${scoreType}-score" min="0" max="9" step="0.5" placeholder="0-9">
+        </div>
+      `).join('');
+    }
+
+    function updateTimerDisplay() {
+      const hours = Math.floor(timerSeconds / 3600);
+      const minutes = Math.floor((timerSeconds % 3600) / 60);
+      const seconds = timerSeconds % 60;
+      
+      document.getElementById('timer-hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('timer-minutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('timer-seconds').textContent = String(seconds).padStart(2, '0');
+    }
+
+    function resetTimer() {
+      timerSeconds = 0;
+      updateTimerDisplay();
+      document.getElementById('start-timer').disabled = false;
+      document.getElementById('start-timer').textContent = '开始';
+      document.getElementById('pause-timer').disabled = true;
+      document.getElementById('stop-timer').disabled = true;
+      document.getElementById('score-section').style.display = 'none';
+      
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      });
+    }
+
+    function saveRecord() {
+      const duration = timerSeconds;
+      const config = modeConfig[currentTimerMode];
+      
+      const scores = {
+        listening: null,
+        reading: null,
+        writing: null,
+        speaking: null
+      };
+      
+      config.scores.forEach(scoreType => {
+        const input = document.getElementById(`${scoreType}-score`);
+        if (input && input.value) {
+          scores[scoreType] = parseFloat(input.value);
+        }
+      });
+      
+      const record = {
+        date: new Date().toISOString(),
+        duration: duration,
+        mode: currentTimerMode,
+        modeName: config.name,
+        scores: scores
+      };
+      
+      appData.records.push(record);
+      saveData();
+      
+      resetTimer();
+      
+      updateTodayStats();
+      updateRecordsList();
+      updateStatsPage();
+      
+      alert('学习记录已保存！');
+    }
+
+    function updateTodayStats() {
+      const today = getTodayString();
+      const todayRecords = appData.records.filter(r => {
+        const recordDate = new Date(r.date);
+        const dateStr = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, '0')}-${String(recordDate.getDate()).padStart(2, '0')}`;
+        return dateStr === today;
+      });
+      
+      const totalDuration = todayRecords.reduce((sum, r) => sum + r.duration, 0);
+      const totalSessions = todayRecords.length;
+      
+      document.getElementById('today-duration').textContent = Math.floor(totalDuration / 60) + '分钟';
+      document.getElementById('today-sessions').textContent = totalSessions + '次';
+    }
+
+    function updateRecordsList() {
+      const listEl = document.getElementById('records-list');
+      
+      if (appData.records.length === 0) {
+        listEl.innerHTML = '<p class="empty-state">暂无学习记录，开始你的第一次学习吧！</p>';
+        return;
+      }
+      
+      const sortedRecords = [...appData.records].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      listEl.innerHTML = sortedRecords.map((record, index) => {
+        const date = new Date(record.date);
+        const dateStr = date.toLocaleDateString('zh-CN', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const duration = Math.floor(record.duration / 60);
+        const modeName = record.modeName || '学习';
+        
+        const scores = [];
+        if (record.scores.listening !== null) scores.push(`<span class="score-badge">听力: <strong>${record.scores.listening}</strong></span>`);
+        if (record.scores.reading !== null) scores.push(`<span class="score-badge">阅读: <strong>${record.scores.reading}</strong></span>`);
+        if (record.scores.writing !== null) scores.push(`<span class="score-badge">写作: <strong>${record.scores.writing}</strong></span>`);
+        if (record.scores.speaking !== null) scores.push(`<span class="score-badge">口语: <strong>${record.scores.speaking}</strong></span>`);
+        
+        // 找到原始索引
+        const originalIndex = appData.records.findIndex(r => r.date === record.date);
+        
+        return `
+          <div class="record-item">
+            <div class="record-header">
+              <span class="record-date">${dateStr} · ${modeName}</span>
+              <div class="record-actions">
+                <span class="record-duration">${duration} 分钟</span>
+                <button class="btn-delete" onclick="deleteRecord(${originalIndex})" title="删除记录">×</button>
+              </div>
+            </div>
+            <div class="record-scores">
+              ${scores.join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateStatsPage() {
+      if (appData.records.length === 0) {
+        document.getElementById('total-duration').textContent = '0';
+        document.getElementById('avg-duration').textContent = '0';
+        document.getElementById('best-score').textContent = '0';
+        document.getElementById('avg-score').textContent = '0';
+        return;
+      }
+      
+      const totalSeconds = appData.records.reduce((sum, r) => sum + r.duration, 0);
+      const totalHours = (totalSeconds / 3600).toFixed(1);
+      document.getElementById('total-duration').textContent = totalHours;
+      
+      const uniqueDates = new Set(appData.records.map(r => {
+        const d = new Date(r.date);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      }));
+      const avgMinutes = Math.floor(totalSeconds / 60 / uniqueDates.size);
+      document.getElementById('avg-duration').textContent = avgMinutes;
+      
+      const allScores = [];
+      appData.records.forEach(r => {
+        Object.values(r.scores).forEach(score => {
+          if (score !== null) allScores.push(score);
+        });
+      });
+      
+      if (allScores.length > 0) {
+        const bestScore = Math.max(...allScores).toFixed(1);
+        const avgScore = (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1);
+        document.getElementById('best-score').textContent = bestScore;
+        document.getElementById('avg-score').textContent = avgScore;
+      }
+      
+      drawCharts();
+    }
+
+    function drawCharts() {
+      const dailyData = {};
+      appData.records.forEach(r => {
+        const date = new Date(r.date);
+        const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+        
+        if (!dailyData[dateStr]) {
+          dailyData[dateStr] = { 
+            duration: 0, 
+            listening: [],
+            reading: [],
+            writing: [],
+            speaking: []
+          };
+        }
+        
+        dailyData[dateStr].duration += r.duration / 60;
+        if (r.scores.listening !== null) dailyData[dateStr].listening.push(r.scores.listening);
+        if (r.scores.reading !== null) dailyData[dateStr].reading.push(r.scores.reading);
+        if (r.scores.writing !== null) dailyData[dateStr].writing.push(r.scores.writing);
+        if (r.scores.speaking !== null) dailyData[dateStr].speaking.push(r.scores.speaking);
+      });
+      
+      const dates = Object.keys(dailyData).slice(-14);
+      const durations = dates.map(d => Math.floor(dailyData[d].duration));
+      
+      const getAvgScores = (subject) => dates.map(d => {
+        const scores = dailyData[d][subject];
+        return scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null;
+      });
+      
+      const listeningScores = getAvgScores('listening');
+      const readingScores = getAvgScores('reading');
+      const writingScores = getAvgScores('writing');
+      const speakingScores = getAvgScores('speaking');
+      
+      // 学习时长图表
+      const durationCtx = document.getElementById('duration-chart');
+      if (window.durationChart) window.durationChart.destroy();
+      window.durationChart = new Chart(durationCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '学习时长（分钟）',
+            data: durations,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+      
+      // 听力图表
+      const listeningCtx = document.getElementById('listening-chart');
+      if (window.listeningChart) window.listeningChart.destroy();
+      window.listeningChart = new Chart(listeningCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '听力分数',
+            data: listeningScores,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 9 } }
+        }
+      });
+      
+      // 阅读图表
+      const readingCtx = document.getElementById('reading-chart');
+      if (window.readingChart) window.readingChart.destroy();
+      window.readingChart = new Chart(readingCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '阅读分数',
+            data: readingScores,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 9 } }
+        }
+      });
+      
+      // 写作图表
+      const writingCtx = document.getElementById('writing-chart');
+      if (window.writingChart) window.writingChart.destroy();
+      window.writingChart = new Chart(writingCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '写作分数',
+            data: writingScores,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 9 } }
+        }
+      });
+      
+      // 口语图表
+      const speakingCtx = document.getElementById('speaking-chart');
+      if (window.speakingChart) window.speakingChart.destroy();
+      window.speakingChart = new Chart(speakingCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: '口语分数',
+            data: speakingScores,
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, max: 9 } }
+        }
+      });
+    }
+
+    function bindEvents() {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          const page = e.currentTarget.dataset.page;
+          
+          document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+          document.getElementById(page + '-page').classList.add('active');
+          
+          if (page === 'stats') {
+            setTimeout(() => updateStatsPage(), 100);
+          }
+        });
+      });
+      
+      document.getElementById('listening-check').addEventListener('change', saveDailyCheckStatus);
+      document.getElementById('reading-check').addEventListener('change', saveDailyCheckStatus);
+      document.getElementById('writing-check').addEventListener('change', saveDailyCheckStatus);
+      document.getElementById('speaking-check').addEventListener('change', saveDailyCheckStatus);
+      
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const mode = e.currentTarget.dataset.mode;
+          selectTimerMode(mode);
+        });
+      });
+      
+      document.getElementById('start-timer').addEventListener('click', startTimer);
+      document.getElementById('pause-timer').addEventListener('click', pauseTimer);
+      document.getElementById('stop-timer').addEventListener('click', stopTimer);
+      
+      document.getElementById('save-record').addEventListener('click', saveRecord);
+      
+      // 分数换算器
+      document.getElementById('listening-correct').addEventListener('input', (e) => {
+        const correct = parseInt(e.target.value);
+        document.getElementById('listening-result').textContent = convertScore(correct);
+      });
+      document.getElementById('reading-correct').addEventListener('input', (e) => {
+        const correct = parseInt(e.target.value);
+        document.getElementById('reading-result').textContent = convertScore(correct);
+      });
+    }
+
+    // 分数换算函数
+    function convertScore(correct) {
+      if (isNaN(correct) || correct < 0 || correct > 40) return '-';
+      
+      const conversion = [
+        { min: 39, max: 40, score: 9.0 },
+        { min: 37, max: 38, score: 8.5 },
+        { min: 35, max: 36, score: 8.0 },
+        { min: 33, max: 34, score: 7.5 },
+        { min: 30, max: 32, score: 7.0 },
+        { min: 27, max: 29, score: 6.5 },
+        { min: 23, max: 26, score: 6.0 },
+        { min: 20, max: 22, score: 5.5 },
+        { min: 16, max: 19, score: 5.0 },
+        { min: 13, max: 15, score: 4.5 },
+        { min: 10, max: 12, score: 4.0 },
+        { min: 6, max: 9, score: 3.5 },
+        { min: 4, max: 5, score: 3.0 },
+        { min: 3, max: 3, score: 2.5 },
+        { min: 2, max: 2, score: 2.0 },
+        { min: 1, max: 1, score: 1.0 },
+        { min: 0, max: 0, score: 0.0 }
+      ];
+      
+      for (let item of conversion) {
+        if (correct >= item.min && correct <= item.max) {
+          return item.score.toFixed(1);
+        }
+      }
+      
+      return '-';
+    }
+
+    // 删除记录函数
+    function deleteRecord(index) {
+      if (confirm('确定要删除这条记录吗？')) {
+        appData.records.splice(index, 1);
+        saveData();
+        updateRecordsList();
+        updateTodayStats();
+        updateStatsPage();
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+体验网址：https://leahliang7.github.io/ielts-study-tracker/
+
 # IELTS 学习打卡系统
 
 一个专为雅思学习打造的桌面应用，帮助你跟踪学习进度、记录成绩、可视化学习数据。
